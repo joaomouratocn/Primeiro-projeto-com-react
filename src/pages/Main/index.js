@@ -1,27 +1,67 @@
-import { useState } from "react";
-import { Container, Form, SubmitButton } from "./styled";
-import { FaGithub, FaPlus } from "react-icons/fa";
+import { useCallback, useEffect, useState } from "react";
+import { Container, Form, SubmitButton, List, DeleteButton } from "./styled";
+import { FaGithub, FaPlus, FaSpinner, FaBars, FaTrash } from "react-icons/fa";
 import api from "../../services/api";
+import { Link } from "react-router-dom";
 
 function Main() {
   const [newRepo, setNewRepo] = useState("");
-  const [respositories, setRepositories] = useState([]);
+  const [repository, setRepository] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState(null);
 
-  async function handlerOnSubmit(e) {
+  useEffect(() => {
+    const savedRepos = localStorage.getItem('repos')
+
+    if (savedRepos) {
+      setRepository(JSON.parse(savedRepos))
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('repos', JSON.stringify(repository))
+  }, [repository]);
+
+  const handlerOnSubmit = useCallback((e) => {
     e.preventDefault();
 
-    const response = await api.get(`repos/${newRepo}`);
+    async function submit() {
+      setLoading(true)
+      setAlert(null)
+      try {
+        if (newRepo === '') { throw new Error("Favor indicar um repositório!") }
 
-    const repoName = { name: response.data.full_name };
+        const hasRepo = repository.find(repo => repo.name == newRepo)
 
-    setRepositories([...respositories, repoName]);
+        if (hasRepo) { throw new Error("Já existe este repositório na sua lista") }
 
-    console.log(respositories);
-  }
+        //const response = await api.get(`repos/${newRepo}`);
+
+        const data = { name: newRepo };
+
+        setRepository([...repository, data]);
+        setNewRepo("");
+      }
+      catch (error) {
+        setAlert(true);
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    submit();
+  }, [newRepo, repository])
 
   function handlerInputChange(e) {
     setNewRepo(e.target.value);
+    setAlert(null)
   }
+
+  const handleDelete = useCallback((repo) => {
+    const find = repository.filter(r => r.name !== repo.name)
+    setRepository(find);
+  }, [repository])
 
   return (
     <Container>
@@ -30,7 +70,7 @@ function Main() {
         Meus repositórios
       </h1>
 
-      <Form onSubmit={(e) => handlerOnSubmit(e)}>
+      <Form onSubmit={handlerOnSubmit} error={alert}>
         <input
           type="text"
           value={newRepo}
@@ -38,10 +78,30 @@ function Main() {
           placeholder="Adicionar Repositórios"
         />
 
-        <SubmitButton>
-          <FaPlus color="#FFF" size={14} />
+        <SubmitButton loading={loading ? 1 : 0}>
+          {
+            loading ? (
+              <FaSpinner color="#FFF" size={14} />
+            ) : (
+              <FaPlus color="#FFF" size={14} />
+            )
+          }
         </SubmitButton>
       </Form>
+
+      <List>
+        {repository.map(repo => (
+          <li key={repo.name}>
+            <span>
+              <DeleteButton onClick={() => handleDelete(repo)}>
+                <FaTrash size={14} />
+              </DeleteButton>
+              {repo.name}
+            </span>
+            <Link to={`/repository/${encodeURIComponent(repo.name)}`}><FaBars size={20} /></Link>
+          </li>
+        ))}
+      </List>
     </Container>
   );
 }

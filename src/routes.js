@@ -3,11 +3,11 @@ import Main from "./pages/Main";
 import Repository from "./pages/Repository"
 import Error from "./pages/Error";
 
-function AppRoutes(){
+function AppRoutes() {
     const routes = useRoutes([
-        {path: '/', element: <Main/>},
-        {path: '/Repository/:reponame', element: <Repository/>},
-        {path: '*', element: <Error/>}
+        { path: '/', element: <Main /> },
+        { path: '/repository/:repository', element: <Repository /> },
+        { path: '*', element: <Error /> }
     ])
 
     return routes;
