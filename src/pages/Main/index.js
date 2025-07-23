@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Container, Form, SubmitButton, List, DeleteButton } from "./styled";
+import { Container, Form, SubmitButton, List, DeleteButton } from "./style";
 import { FaGithub, FaPlus, FaSpinner, FaBars, FaTrash } from "react-icons/fa";
 import api from "../../services/api";
 import { Link } from "react-router-dom";
@@ -31,13 +31,13 @@ function Main() {
       try {
         if (newRepo === '') { throw new Error("Favor indicar um repositório!") }
 
-        const hasRepo = repository.find(repo => repo.name == newRepo)
+        const hasRepo = repository.find(repo => repo.name === newRepo)
 
         if (hasRepo) { throw new Error("Já existe este repositório na sua lista") }
 
-        //const response = await api.get(`repos/${newRepo}`);
+        const response = await api.get(`repos/${newRepo}`);
 
-        const data = { name: newRepo };
+        const data = { name: response.data.full_name };
 
         setRepository([...repository, data]);
         setNewRepo("");
